@@ -1,0 +1,48 @@
+# Worked example, DPF draft v0.0. Values are illustrative.
+dpf: "0.0"
+metadata:
+  name: example-service-policy
+  owner: platform-team
+  updated: "2026-10-21"
+defaults:
+  scope: all
+  on_unknown: reject
+
+licenses:
+  allow:
+    - Apache-2.0
+    - MIT
+    - BSD-3-Clause
+    - ISC
+  deny:
+    - GPL-3.0-only
+    - AGPL-3.0-only
+  exceptions:
+    - purl: pkg:npm/some-build-tool
+      allow: GPL-3.0-only
+      reason: Build-time only, not distributed with the product
+      expires: "2027-06-30"
+
+packages:
+  deny:
+    - purl: pkg:npm/event-stream
+      versions: ">=3.3.6 <3.3.7"
+      reason: Known malicious release
+  sources:
+    pypi:
+      - https://pypi.org/simple
+
+vulnerabilities:
+  fail_above: medium
+  severity_source: cvss
+  ignore:
+    - id: CVE-2024-12345
+      purl: pkg:maven/org.example/lib
+      reason: Vulnerable function is not reachable from this service
+      expires: "2027-01-31"
+      justification: vulnerable_code_not_in_execute_path
+
+profiles:
+  production:
+    vulnerabilities:
+      fail_above: low

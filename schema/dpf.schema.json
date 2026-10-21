@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Level909innovacion/dependency-policy-format/schema/dpf.schema.json",
+  "title": "Dependency Policy Format (DPF) v0.0",
+  "description": "Draft v0.0. Unstable.",
+  "type": "object",
+  "required": ["dpf"],
+  "additionalProperties": false,
+  "properties": {
+    "dpf": { "type": "string", "const": "0.0" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "owner": { "type": "string" },
+        "updated": { "type": "string", "format": "date" }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "on_unknown": { "type": "string", "enum": ["reject", "warn", "accept"] }
+      }
+    },
+    "licenses": { "$ref": "#/$defs/licenses" },
+    "packages": { "$ref": "#/$defs/packages" },
+    "vulnerabilities": { "$ref": "#/$defs/vulnerabilities" },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "licenses": { "$ref": "#/$defs/licenses" },
+          "packages": { "$ref": "#/$defs/packages" },
+          "vulnerabilities": { "$ref": "#/$defs/vulnerabilities" }
+        }
+      }
+    }
+  },
+  "patternProperties": { "^x-": {} },
+  "$defs": {
+    "scope": { "type": "string", "enum": ["all", "direct", "transitive"] },
+    "purl": { "type": "string", "pattern": "^pkg:[a-z0-9.+-]+/.+" },
+    "date": { "type": "string", "format": "date" },
+    "severity": { "type": "string", "enum": ["none", "low", "medium", "high", "critical"] },
+    "advisoryId": { "type": "string", "pattern": "^(CVE-\\d{4}-\\d{4,}|GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}|[A-Z]+-[0-9A-Za-z-]+)$" },
+    "licenses": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "allow": { "type": "array", "items": { "type": "string" } },
+        "deny": { "type": "array", "items": { "type": "string" } },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["purl", "allow", "reason", "expires"],
+            "additionalProperties": false,
+            "properties": {
+              "purl": { "$ref": "#/$defs/purl" },
+              "versions": { "type": "string" },
+              "allow": { "type": "string" },
+              "reason": { "type": "string", "minLength": 1 },
+              "expires": { "$ref": "#/$defs/date" }
+            }
+          }
+        }
+      }
+    },
+    "packages": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "deny": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["purl"],
+            "additionalProperties": false,
+            "properties": {
+              "purl": { "$ref": "#/$defs/purl" },
+              "versions": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "allow_only": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["purl"],
+            "additionalProperties": false,
+            "properties": {
+              "purl": { "$ref": "#/$defs/purl" },
+              "versions": { "type": "string" }
+            }
+          }
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": { "type": "array", "items": { "type": "string", "format": "uri" } }
+        }
+      }
+    },
+    "vulnerabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": { "^x-": {} },
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "fail_above": { "$ref": "#/$defs/severity" },
+        "severity_source": { "type": "string", "enum": ["cvss", "source"] },
+        "require_fix_available": { "type": "boolean" },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "reason", "expires"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "$ref": "#/$defs/advisoryId" },
+              "purl": { "$ref": "#/$defs/purl" },
+              "versions": { "type": "string" },
+              "reason": { "type": "string", "minLength": 1 },
+              "expires": { "$ref": "#/$defs/date" },
+              "justification": {
+                "type": "string",
+                "enum": [
+                  "component_not_present",
+                  "vulnerable_code_not_present",
+                  "vulnerable_code_not_in_execute_path",
+                  "vulnerable_code_cannot_be_controlled_by_adversary",
+                  "inline_mitigations_already_exist"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
